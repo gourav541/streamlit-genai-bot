@@ -10,16 +10,26 @@ load_dotenv()
 
 adagen_basic_prompt = adagen_basic_prompt.adagen_basics_system_prompt
 
-st.title("Langchain Demo with OpenAI API")
-query=st.text_input("Search the topic you want")
+st.title("ACS GenAI ChatBot Demo")
+
+
+# ---------------------------------------
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+
 
 # Initialize Pinecone and get the embedding vector
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-embedding_vector = OpenAIEmbeddings().embed_query(query)
-
 #searching the best match from VectorDB
-def searching_docs():
+def searching_docs(embedding_vector):
     index = pc.Index("acs")
     answer = index.query(
         namespace="adagen_info",
@@ -41,8 +51,8 @@ def format_results(data):
     return "\n".join(formatted_output)
 
 # Formatting and retrieve the text
-def retrieve_and_format():
-    answer = searching_docs()
+def retrieve_and_format(embedding_vector):
+    answer = searching_docs(embedding_vector)
     formatted_text = format_results(answer)
     return formatted_text
 
@@ -61,16 +71,29 @@ def refining_answer(formatted_text, query):
             "system",
             adagen_basic_prompt,
         ),
-        ("human", combined_input)
-        
+        ("human", combined_input)   
     ]
-    
     response = llm.invoke(messages)
     content =  response.content
     return content
 
 
 if __name__ == "__main__":
-    formatted_text = retrieve_and_format()
-    refined_response = refining_answer(formatted_text, query)
-    st.success(refined_response)
+    query = st.chat_input("Search the topic you want")
+    if query:  # Check if the user has entered a query
+        embedding_vector = OpenAIEmbeddings().embed_query(query)
+        formatted_text = retrieve_and_format(embedding_vector)  # Make sure this function accepts embedding_vector
+        response = refining_answer(formatted_text, query)
+
+        # Display user message in chat message container
+        st.chat_message("user").markdown(query)
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": query})
+
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            st.markdown(response)
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": response})
+
+    
