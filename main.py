@@ -4,8 +4,11 @@ from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA  
 import streamlit as st
+from prompts import adagen_basic_prompt
 
 load_dotenv()
+
+adagen_basic_prompt = adagen_basic_prompt.adagen_basics_system_prompt
 
 st.title("Langchain Demo with OpenAI API")
 query=st.text_input("Search the topic you want")
@@ -13,20 +16,19 @@ query=st.text_input("Search the topic you want")
 # Initialize Pinecone and get the embedding vector
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-
 embedding_vector = OpenAIEmbeddings().embed_query(query)
 
 #searching the best match from VectorDB
 def searching_docs():
-    index = pc.Index("education")
+    index = pc.Index("acs")
     answer = index.query(
-        namespace="wondervector5000",
+        namespace="adagen_info",
         vector=embedding_vector,
         top_k=3,
         include_metadata=True,
         include_values=True
     )
-    print(answer)
+    
     return answer
 
 # Function to format the results
@@ -51,9 +53,19 @@ def refining_answer(formatted_text, query):
         model_name="gpt-3.5-turbo",
         temperature=0.0
     )
-    # Combining the formatted text with the query for the LLM
+    
     combined_input = f"Question: {query}\n\nContext:\n{formatted_text}"
-    response = llm.invoke(combined_input)
+    
+    messages = [
+        (
+            "system",
+            adagen_basic_prompt,
+        ),
+        ("human", combined_input)
+        
+    ]
+    
+    response = llm.invoke(messages)
     content =  response.content
     return content
 
@@ -61,5 +73,4 @@ def refining_answer(formatted_text, query):
 if __name__ == "__main__":
     formatted_text = retrieve_and_format()
     refined_response = refining_answer(formatted_text, query)
-    print(refined_response)
     st.success(refined_response)
