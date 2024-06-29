@@ -10,8 +10,7 @@ load_dotenv()
 
 adagen_basic_prompt = adagen_basic_prompt.adagen_basics_system_prompt
 
-st.title("ACS GenAI ChatBot Demo")
-
+st.title("Dhruv - Adagen GenAI Bot")
 
 # ---------------------------------------
 # Initialize chat history
@@ -22,8 +21,6 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
-
 
 # Initialize Pinecone and get the embedding vector
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
@@ -38,7 +35,6 @@ def searching_docs(embedding_vector):
         include_metadata=True,
         include_values=True
     )
-    
     return answer
 
 # Function to format the results
