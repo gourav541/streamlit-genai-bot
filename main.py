@@ -56,7 +56,7 @@ def retrieve_and_format(embedding_vector):
 def refining_answer(formatted_text, query):
     llm = ChatOpenAI(
         openai_api_key=os.environ.get("OPENAI_API_KEY"),
-        model_name="gpt-3.5-turbo",
+        model_name="gpt-4o-mini",
         temperature=0.0
     )
     
