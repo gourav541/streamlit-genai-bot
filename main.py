@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 SYSTEM_PROMPT = system_prompt.basic_system_prompt
 
 # Streamlit Title
-st.title("Dhruv - Adagen GenAI Bot")
+st.title("Dhruv - Adagen GenAI Assistant")
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -70,7 +70,19 @@ def format_results(data):
     formatted_output = []
     for match in data:
         text_snippet = match["metadata"].get("text", "No text available").strip()
-        formatted_output.append(f"- {text_snippet}")
+        source_link = match["metadata"].get("source", "Source not available")
+
+        file_name = source_link.split("/")[-1] if "/" in source_link else source_link
+        # Convert file path to URL if it's a local path
+        if source_link.startswith("knowledge_base/MP_cooperative_societies"):
+            source_link = f"{os.environ.get('SERVER_HOST')}/files/{file_name}"
+
+        # Format response properly
+        formatted_output.append(
+            f"- {text_snippet}\n  **Source:** [Citation]({source_link})"
+            if source_link.startswith("http")
+            else f"- {text_snippet} (Source: {source_link})"
+        )
 
     return "\n".join(formatted_output)
 
@@ -79,6 +91,8 @@ def get_relevant_text(embedding_vector):
     Retrieve relevant documents from Pinecone and format the results.
     """
     response = search_docs(embedding_vector)
+    # print('response')
+    # print(response)
     return format_results(response) if response else "No relevant data available."
 
 def generate_response(context, query):
@@ -88,13 +102,16 @@ def generate_response(context, query):
     try:
         llm = ChatOpenAI(
             openai_api_key=os.environ.get("OPENAI_API_KEY"),
-            model_name="gpt-3.5-turbo",
-            temperature=0.2
+            model_name="gpt-4o",
+            temperature=0.7
         )
 
         if "No relevant information found" in context:
-            return "I couldn't find relevant information in the database. Could you please rephrase or provide more details?"
-
+            return (
+                "I specialize in providing information related to M.P Cooperative Societies based on the available knowledge base. "
+                "Unfortunately, I couldn't answer for your query. Kindly ask a question related to the M.P Cooperative Societies, and I will be happy to assist you."
+            )
+        
         combined_input = f"""
         You are an AI assistant responding to user queries based on a knowledge base.
         - **User Query:** {query}
@@ -138,4 +155,4 @@ if __name__ == "__main__":
         # Display chat
         st.chat_message("user").markdown(query)
         with st.chat_message("assistant"):
-            st.markdown(response)
+            st.markdown(response, unsafe_allow_html=True)
