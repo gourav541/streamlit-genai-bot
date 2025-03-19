@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 SYSTEM_PROMPT = system_prompt.basic_system_prompt
 
 # Streamlit Title
-st.title("Dhruv - Adagen GenAI Assistant")
+st.title("Adagen GenAI Assistant")
 
 # Initialize chat history
 if "messages" not in st.session_state:
