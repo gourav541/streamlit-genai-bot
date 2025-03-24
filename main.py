@@ -1,6 +1,7 @@
 import os
 import logging
 import streamlit as st
+import base64
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Pinecone
@@ -16,8 +17,76 @@ logging.basicConfig(level=logging.INFO)
 # Initialize system prompt
 SYSTEM_PROMPT = system_prompt.basic_system_prompt
 
-# Streamlit Title
-st.title("Adagen GenAI Assistant")
+# Function to encode the local image to base64
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode("utf-8")
+    return f"data:image/png;base64,{encoded}"
+
+# Get base64-encoded image
+image_base64 = get_base64_image("/home/ubuntu/custom-llm-streamlit-bot/ATL_PNG_FF.png")
+
+
+
+# Create a container for the title and powered-by text
+st.markdown('<div style="position: fixed;">', unsafe_allow_html=True)
+
+# Your app title
+st.title(" MP Administrative GenAI Assistant")
+
+# Add "Powered by Adagen" text positioned at the bottom-right of the title
+st.markdown(
+    """
+    <style>
+    .powered-by {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        font-size: 15px;
+        color: gray;
+        font-family: Arial, sans-serif;
+    }
+    .logo {
+        width: 50px;  /* Adjust size as needed */
+        height: 50px;
+        border-radius: 50%;
+        margin-left: 5px;
+    }
+    .bottom-right-logo {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;  /* Logo size at bottom-right */
+        height: 50px;
+        border-radius: 50%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Add the powered by text inside the container
+st.markdown(f"""
+    <div class="powered-by">
+        Powered by Adagen
+        <img src="{image_base64}" class="logo">
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# Close the container
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Add logo at bottom-right corner
+st.markdown(
+    f"""
+    <img src="{image_base64}" class="bottom-right-logo">
+    """,
+    unsafe_allow_html=True
+)
+
 
 # Initialize chat history
 if "messages" not in st.session_state:
