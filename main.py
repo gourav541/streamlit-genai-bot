@@ -24,7 +24,7 @@ def get_base64_image(image_path):
     return f"data:image/png;base64,{encoded}"
 
 # Get base64-encoded image
-image_base64 = get_base64_image("/home/ubuntu/custom-llm-streamlit-bot/ATL_PNG_FF.png")
+image_base64 = get_base64_image("./assets/images/ATL_PNG_FF.png")
 
 
 
